@@ -50,7 +50,7 @@ bool q_insert_head(struct list_head *head, char *s)
     if (!head)
         return false;
 
-    element_t *ptr = malloc(sizeof(element_t));
+    element_t *ptr_ = malloc(sizeof(element_t)), *ptr = ptr_;
     if (ptr == NULL) {
         free(ptr);
         ptr = NULL;
@@ -67,8 +67,6 @@ bool q_insert_head(struct list_head *head, char *s)
     (&ptr->list)->next = next;
     (&ptr->list)->prev = head;
 
-    free(ptr);
-    ptr = NULL;
     return true;
 }
 
@@ -81,6 +79,26 @@ bool q_insert_head(struct list_head *head, char *s)
  */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
+    element_t *ptr_ = malloc(sizeof(element_t)), *ptr = ptr_;
+    if (ptr == NULL) {
+        free(ptr);
+        ptr = NULL;
+        return false;
+    }
+
+    ptr->value = malloc(strlen(s));
+    strncpy(ptr->value, s, strlen(s));
+    (ptr->value)[strlen(s)] = '\0';
+
+    struct list_head *prev = head->prev;
+    head->prev = &(ptr->list);
+    prev->next = &(ptr->list);
+    (&ptr->list)->next = head;
+    (&ptr->list)->prev = prev;
+
     return true;
 }
 
@@ -105,7 +123,6 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 
     struct list_head *cur = head->next;
     struct list_head *next = cur->next;
-
     head->next = next;
     next->prev = head;
 
@@ -123,7 +140,20 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
  */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    if (!head || head->next == head)
+        return NULL;
+
+    struct list_head *cur = head->prev;
+    struct list_head *prev = cur->prev;
+    head->prev = prev;
+    prev->next = head;
+
+    INIT_LIST_HEAD(cur);
+    element_t *ptr = list_entry(cur, element_t, list);
+    strncpy(sp, ptr->value, bufsize);
+    sp[bufsize - 1] = '\0';
+
+    return ptr;
 }
 
 /*
