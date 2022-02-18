@@ -30,10 +30,9 @@ void q_free(struct list_head *l)
 {
     if (!l)
         return;
-    struct list_head *li;
-    list_for_each (li, l) {
-        element_t *ptr = list_entry(li, element_t, list);
-        q_release_element(ptr);
+    element_t *el, *tmp;
+    list_for_each_entry_safe (el, tmp, l, list) {
+        q_release_element(el);
     }
     free(l);
 }
@@ -51,20 +50,12 @@ bool q_insert_head(struct list_head *head, char *s)
         return false;
 
     element_t *ptr_ = malloc(sizeof(element_t)), *ptr = ptr_;
-    if (ptr == NULL) {
-        free(ptr);
-        ptr = NULL;
+    if (!ptr)
         return false;
-    }
-    ptr->value = malloc(strlen(s));
-    strncpy(ptr->value, s, strlen(s));
-    (ptr->value)[strlen(s)] = '\0';
 
-    struct list_head *next = head->next;
-    head->next = &(ptr->list);
-    next->prev = &(ptr->list);
-    (&ptr->list)->next = next;
-    (&ptr->list)->prev = head;
+    ptr->value = strdup(s);
+
+    list_add(&ptr->list, head);
 
     return true;
 }
@@ -82,21 +73,13 @@ bool q_insert_tail(struct list_head *head, char *s)
         return false;
 
     element_t *ptr_ = malloc(sizeof(element_t)), *ptr = ptr_;
-    if (ptr == NULL) {
-        free(ptr);
-        ptr = NULL;
+    if (!ptr) {
         return false;
     }
 
-    ptr->value = malloc(strlen(s));
-    strncpy(ptr->value, s, strlen(s));
-    (ptr->value)[strlen(s)] = '\0';
+    ptr->value = strdup(s);
 
-    struct list_head *prev = head->prev;
-    head->prev = &(ptr->list);
-    prev->next = &(ptr->list);
-    (&ptr->list)->next = head;
-    (&ptr->list)->prev = prev;
+    list_add_tail(&ptr->list, head);
 
     return true;
 }
@@ -117,18 +100,15 @@ bool q_insert_tail(struct list_head *head, char *s)
  */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (!head || head->next == head)
+    if (!head || !q_size(head))
         return NULL;
 
-    struct list_head *cur = head->next;
-    struct list_head *next = cur->next;
-    head->next = next;
-    next->prev = head;
+    element_t *ptr = list_entry(head->next, element_t, list);
 
-    INIT_LIST_HEAD(cur);
-    element_t *ptr = list_entry(cur, element_t, list);
     strncpy(sp, ptr->value, bufsize);
     sp[bufsize - 1] = '\0';
+
+    list_del_init(head->next);
 
     return ptr;
 }
@@ -142,15 +122,12 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
     if (!head || !q_size(head))
         return NULL;
 
-    struct list_head *cur = head->prev;
-    struct list_head *prev = cur->prev;
-    head->prev = prev;
-    prev->next = head;
+    element_t *ptr = list_entry(head->prev, element_t, list);
 
-    INIT_LIST_HEAD(cur);
-    element_t *ptr = list_entry(cur, element_t, list);
     strncpy(sp, ptr->value, bufsize);
     sp[bufsize - 1] = '\0';
+
+    list_del_init(head->prev);
 
     return ptr;
 }
@@ -201,12 +178,7 @@ bool q_delete_mid(struct list_head *head)
         slow = slow->next;
         fast = fast->next->next;
     }
-    struct list_head *prev = slow->prev;
-    struct list_head *next = slow->next;
-    prev->next = next;
-    next->prev = prev;
-
-    INIT_LIST_HEAD(slow);
+    list_del_init(slow);
 
     return true;
 }
