@@ -17,11 +17,26 @@
  */
 struct list_head *q_new()
 {
-    return NULL;
+    struct list_head *head = malloc(sizeof(struct list_head));
+    if (!head)
+        return NULL;
+    INIT_LIST_HEAD(head);
+
+    return head;
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *l) {}
+void q_free(struct list_head *l)
+{
+    if (!l)
+        return;
+    struct list_head *li;
+    list_for_each (li, l) {
+        element_t *ptr = list_entry(li, element_t, list);
+        q_release_element(ptr);
+    }
+    free(l);
+}
 
 /*
  * Attempt to insert element at head of queue.
@@ -32,6 +47,28 @@ void q_free(struct list_head *l) {}
  */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
+    element_t *ptr = malloc(sizeof(element_t));
+    if (ptr == NULL) {
+        free(ptr);
+        ptr = NULL;
+        return false;
+    }
+
+    ptr->value = malloc(strlen(s));
+    strncpy(ptr->value, s, strlen(s));
+    (ptr->value)[strlen(s)] = '\0';
+
+    struct list_head *next = head->next;
+    head->next = &(ptr->list);
+    next->prev = &(ptr->list);
+    (&ptr->list)->next = next;
+    (&ptr->list)->prev = head;
+
+    free(ptr);
+    ptr = NULL;
     return true;
 }
 
@@ -63,7 +100,21 @@ bool q_insert_tail(struct list_head *head, char *s)
  */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    if (!head || head->next == head)
+        return NULL;
+
+    struct list_head *cur = head->next;
+    struct list_head *next = cur->next;
+
+    head->next = next;
+    next->prev = head;
+
+    INIT_LIST_HEAD(cur);
+    element_t *ptr = list_entry(cur, element_t, list);
+    strncpy(sp, ptr->value, bufsize);
+    sp[bufsize - 1] = '\0';
+
+    return ptr;
 }
 
 /*
@@ -91,7 +142,15 @@ void q_release_element(element_t *e)
  */
 int q_size(struct list_head *head)
 {
-    return -1;
+    if (!head)
+        return 0;
+
+    int len = 0;
+    struct list_head *li;
+
+    list_for_each (li, head)
+        len++;
+    return len;
 }
 
 /*
