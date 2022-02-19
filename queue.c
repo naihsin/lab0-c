@@ -244,6 +244,9 @@ void q_swap(struct list_head *head)
  */
 void q_reverse(struct list_head *head)
 {
+    if (!head)
+        return;
+
     struct list_head *li, *safe;
     list_for_each_safe (li, safe, head) {
         list_move(li, head);
