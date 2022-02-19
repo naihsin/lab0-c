@@ -30,8 +30,8 @@ void q_free(struct list_head *l)
 {
     if (!l)
         return;
-    element_t *el, *tmp;
-    list_for_each_entry_safe (el, tmp, l, list) {
+    element_t *el, *safe;
+    list_for_each_entry_safe (el, safe, l, list) {
         q_release_element(el);
     }
     free(l);
@@ -234,7 +234,13 @@ void q_swap(struct list_head *head)
  * (e.g., by calling q_insert_head, q_insert_tail, or q_remove_head).
  * It should rearrange the existing ones.
  */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    struct list_head *li, *safe;
+    list_for_each_safe (li, safe, head) {
+        list_move(li, head);
+    }
+}
 
 /*
  * Sort elements of queue in ascending order
