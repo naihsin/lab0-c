@@ -263,7 +263,7 @@ void q_sort(struct list_head *head)
     head->prev = ptr;
 }
 
-struct list_head *q_merge(struct list_head *ptr)
+struct list_head *q_mergesort(struct list_head *ptr)
 {
     if (!ptr || !ptr->next)
         return ptr;
@@ -276,12 +276,12 @@ struct list_head *q_merge(struct list_head *ptr)
     struct list_head *left, *right;
     fast = slow->next;
     slow->next = NULL;
-    left = q_merge(ptr);
-    right = q_merge(fast);
-    return q_mergefinal(left, right);
+    left = q_mergesort(ptr);
+    right = q_mergesort(fast);
+    return q_sortedmerge(left, right);
 }
 
-struct list_head *q_mergefinal(struct list_head *left, struct list_head *right)
+struct list_head *q_sortedmerge(struct list_head *left, struct list_head *right)
 {
     struct list_head *head = left, *prev = NULL, **ptr = &head, **node;
 
