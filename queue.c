@@ -247,4 +247,54 @@ void q_reverse(struct list_head *head)
  * No effect if q is NULL or empty. In addition, if q has only one
  * element, do nothing.
  */
-void q_sort(struct list_head *head) {}
+void q_sort(struct list_head *head)
+{
+    if (!head || !q_size(head) || q_size(head) == 1)
+        return;
+    head->prev->next = NULL;
+    struct list_head *ptr = q_merge(head->next);
+    head->next = ptr;
+    ptr->prev = head;
+
+    while (ptr->next) {
+        ptr = ptr->next;
+    }
+    ptr->next = head;
+    head->prev = ptr;
+}
+
+struct list_head *q_merge(struct list_head *ptr)
+{
+    if (!ptr || !ptr->next)
+        return ptr;
+
+    struct list_head *slow = ptr, *fast = ptr;
+    while (fast->next != ptr->next && fast->next->next != ptr->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    struct list_head *left, *right;
+    fast = slow->next;
+    slow->next = NULL;
+    left = q_merge(ptr);
+    right = q_merge(fast);
+    return q_mergefinal(left, right);
+}
+
+struct list_head *q_mergefinal(struct list_head *left, struct list_head *right)
+{
+    struct list_head *head = left, *prev = NULL, **ptr = &head, **node;
+
+    for (node = NULL; left && right; *node = (*node)->next) {
+        element_t *el = list_entry(left, element_t, list);
+        element_t *el2 = list_entry(right, element_t, list);
+        node = (strcmp(el->value, el2->value) < 0) ? &left : &right;
+        (*node)->prev = prev;
+        prev = *node;
+        *ptr = *node;
+        ptr = &(*ptr)->next;
+    }
+    *ptr = left ? left : right;
+    (*ptr)->prev = prev;
+    return head;
+}
