@@ -108,8 +108,10 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 
     element_t *ptr = list_entry(head->next, element_t, list);
 
-    strncpy(sp, ptr->value, bufsize);
-    sp[bufsize - 1] = '\0';
+    if (sp) {
+        strncpy(sp, ptr->value, bufsize);
+        sp[bufsize - 1] = '\0';
+    }
 
     list_del_init(head->next);
 
@@ -127,8 +129,11 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 
     element_t *ptr = list_entry(head->prev, element_t, list);
 
-    strncpy(sp, ptr->value, bufsize);
-    sp[bufsize - 1] = '\0';
+    if (sp) {
+        strncpy(sp, ptr->value, bufsize);
+        sp[bufsize - 1] = '\0';
+    }
+
 
     list_del_init(head->prev);
 
@@ -223,7 +228,7 @@ void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
     struct list_head *left = head->next, *right = left->next;
-    while (left != head) {
+    while (left != head && right != head) {
         list_move(left, right);
         left = left->next;
         right = left->next;
