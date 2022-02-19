@@ -179,6 +179,7 @@ bool q_delete_mid(struct list_head *head)
         fast = fast->next->next;
     }
     list_del_init(slow);
+    q_release_element(list_entry(slow, element_t, list));
 
     return true;
 }
@@ -195,6 +196,20 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+    if (!q_size(head))
+        return false;
+
+    struct list_head *cur = head->next;
+    while (cur->next != head) {
+        element_t *first = list_entry(cur, element_t, list);
+        element_t *second = list_entry(cur->next, element_t, list);
+        if (!strcmp(first->value, second->value)) {
+            list_del_init(cur->next);
+            q_release_element(second);
+        } else {
+            cur = cur->next;
+        }
+    }
     return true;
 }
 
@@ -204,6 +219,12 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+    struct list_head *left = head->next, *right = left->next;
+    while (left != head) {
+        list_move(left, right);
+        left = left->next;
+        right = left->next;
+    }
 }
 
 /*
