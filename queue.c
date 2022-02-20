@@ -267,7 +267,7 @@ void q_reverse(struct list_head *head)
  */
 void q_sort(struct list_head *head)
 {
-    if (!head || !q_size(head) || q_size(head) == 1)
+    if (!head || list_empty(head))
         return;
     head->prev->next = NULL;
     struct list_head *ptr = q_merge(head->next);
@@ -283,11 +283,11 @@ void q_sort(struct list_head *head)
 
 struct list_head *q_merge(struct list_head *ptr)
 {
-    if (!ptr || !ptr->next)
+    if (!ptr->next)
         return ptr;
 
     struct list_head *slow = ptr, *fast = ptr;
-    while (fast->next != ptr->next && fast->next->next != ptr->next) {
+    while (fast->next && fast->next->next) {
         slow = slow->next;
         fast = fast->next->next;
     }
